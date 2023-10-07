@@ -2,6 +2,8 @@
 title: "ggplot2_colors"
 format: html
 editor: visual
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -268,8 +270,7 @@ penguins_data |>
 
 ## [Use colors to drill down into important parts of your data viz.](https://twitter.com/rappa753/status/1646528705123201029)
 
-![1️⃣](https://abs-0.twimg.com/emoji/v2/svg/31-20e3.svg){alt="1️⃣"} - case_when() or if_else()
-![2️⃣](https://abs-0.twimg.com/emoji/v2/svg/32-20e3.svg){alt="2️⃣"} - scale\_\*\_identity()
+![1️⃣](https://abs-0.twimg.com/emoji/v2/svg/31-20e3.svg){alt="1️⃣"} - case_when() or if_else() ![2️⃣](https://abs-0.twimg.com/emoji/v2/svg/32-20e3.svg){alt="2️⃣"} - scale\_\*\_identity()
 
 Use this combo to change whatever you want based on any condition you like.
 
@@ -393,4 +394,245 @@ palmerpenguins::penguins |>
        and <span style = "color:#009E73"> **female** </span> penguins')
 ```
 
-![1️⃣](https://abs-0.twimg.com/emoji/v2/svg/31-20e3.svg){alt="1️⃣"}
+![1️⃣](https://abs-0.twimg.com/emoji/v2/svg/31-20e3.svg)
+
+# [**How to make your own color palettes in ggplot**](https://www.youtube.com/watch?v=1WoBs5jFY1M)
+
+# [**How to make your own color palettes in ggplot BlogPost**](https://rfortherestofus.com/2023/01/how-to-make-your-own-color-palettes-in-ggplot/)
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+# Define Colors -----------------------------------------------------------
+
+pol_purple <- "#8359AB"
+pol_yellow <- "#FFDE39"
+pol_gray <- "#827C78"
+pol_blue <- "#49B8F1"
+pol_brown <- "#B88262"
+pol_pink <- "#DC458E"
+```
+
+## **Qualitative Color Scale**
+
+To make a qualitative color scale, I used the colors I defined in combination with the **`scale_color_manual()`** function.
+
+```{r}
+# Qualitative -------------------------------------------------------------
+
+scale_color_pol_qualitative <- function() {
+  
+  scale_color_manual(values = c(pol_blue, 
+                                pol_pink, 
+                                pol_yellow, 
+                                pol_purple, 
+                                pol_gray, 
+                                pol_brown))
+  
+}
+```
+
+## **Sequential Color Scale**
+
+Next, I made a sequential color scale. I adapted the **`scale_fill_gradient()`** function to make this function.
+
+```{r}
+scale_fill_pol_sequential <- function(low_color = pol_yellow, 
+                                     high_color = pol_purple) {
+  
+  scale_fill_gradient(low = low_color, 
+                      high = high_color)
+  
+}
+```
+
+## **Diverging Color Scale**
+
+Finally, I made a diverging color scale. To do this, I adapted the scale_fill_gradient2() function, which gives me the ability to set a medium color, in addition to the high and low colors.
+
+```{r}
+scale_fill_pol_diverging <- function(low_color = pol_yellow, 
+                                    medium_color = "white",
+                                    high_color = pol_pink) {
+  
+  scale_fill_gradient2(low = low_color, 
+                       mid = medium_color,
+                       high = high_color)
+  
+}
+```
+
+```{r}
+
+palmerpenguins::penguins %>%
+  ggplot() +
+  geom_point(aes(x = bill_length_mm, 
+                 y = flipper_length_mm,
+                 color = island)) +
+  labs(title = "Palmer Penguins", 
+       subtitle = "Look at them go!",
+       x = "Bill length",
+       y = "Flipper length") +
+  theme_minimal() +
+  scale_color_pol_qualitative()
+```
+
+```{r}
+# Download Data -----------------------------------------------------------
+
+library(tigris)
+options(tigris_use_cache = TRUE)
+
+# Downloaded from https://github.com/tonmcg/US_County_Level_Election_Results_08-20
+presidential_returns_by_county <- read_csv("https://github.com/tonmcg/US_County_Level_Election_Results_08-20/raw/master/2020_US_County_Level_Presidential_Results.csv")
+
+# Done with tigris package
+us_counties <- counties()
+
+# Merge datasets
+nc_presidential_returns_by_county <- us_counties %>% 
+  left_join(presidential_returns_by_county,
+            by = c("GEOID" = "county_fips")) %>% 
+  filter(state_name == "North Carolina") %>% 
+  mutate(county_name = str_remove(county_name, " County")) %>% 
+  select(county_name, contains("votes"), per_point_diff) 
+
+nc_presidential_returns_by_county %>% 
+  ggplot(aes(fill = total_votes)) +
+  geom_sf() +
+  theme_void() +
+  scale_fill_pol_sequential()
+
+nc_presidential_returns_by_county %>% 
+  ggplot(aes(fill = total_votes)) +
+  geom_sf() +
+  theme_void() +
+  scale_fill_pol_sequential(low_color = pol_purple,
+                           high_color = pol_yellow)
+```
+
+```{r}
+# Diverging ---------------------------------------------------------------
+nc_presidential_returns_by_county %>% 
+  ggplot(aes(fill = per_point_diff)) +
+  geom_sf() +
+  theme_void() +
+  scale_fill_pol_diverging()
+```
+
+## **A Couple Caveats**
+
+This post has shown how to make custom color scales. What I haven't done is talked about choosing good colors for you color scales. If you want to read more on that, check out:
+
+-   [**This blog post written by R for the Rest of Us consultant Cara Thompson**](https://rfortherestofus.com/2022/02/data-viz-org-branding/)
+
+-   [**The Glamour of Graphics course**](https://rfortherestofus.com/courses/glamour/), which has an entire section on color
+
+-   [**This incredibly comprehensive article by Lisa Charlotte Muth on choosing colors for data viz**](https://blog.datawrapper.de/beautifulcolors/)
+
+The other important thing to note is that it's important to consider colorblindness when creating color palettes. Again, to keep things focused, I haven't done that in this blog post. However, there is a great [**R package called**](https://github.com/clauswilke/colorblindr)**`colorblindr`** to help you ensure your custom ggplot color palettes are accessible to all users.
+
+Good luck making your own custom ggplot color palettes!
+
+# [**Three easy ways to use better colors in ggplot by Albert Rapp**](https://www.youtube.com/watch?v=ZVSbY4z7tMY&t=56s)
+
+1.   scale_color\_\*()
+2.   scale_color_manual()
+3.  scale_color_identity \# this is powerful
+
+```{r}
+my_penguins_plot <-palmerpenguins::penguins |> 
+  filter(!is.na(sex)) |> 
+  ggplot(
+    aes(x = bill_length_mm, y = body_mass_g, color = species)) + 
+      geom_point(size = 5, alpha = 0.85) +
+    theme_minimal(
+      base_size = 16, base_family = "Source Sans Pro"
+    ) + 
+    labs(
+      x = "Bill length (in mm)", 
+      y = "Penguin weights (in g)", 
+      title = 'Penguins from the Palmer Archipelago', 
+      color = 'Species'
+    )
+    
+  
+```
+
+## Number 1 color trick scale_color\_\*()
+
+```{r}
+my_penguins_plot + 
+  scale_color_brewer()
+# look at the Palettes section of the scale_color_brewer documentation just search in the help tab of RStudio
+my_penguins_plot +
+  scale_color_brewer(palette = "Set2")
+# we can also use viridus color palette
+
+my_penguins_plot +
+  scale_color_viridis_d(option = "cividis") # now the yellow color is not looking that great, so here goes the bonus trick 
+```
+
+## Bonus
+
+```{r}
+# to do something about yellow color, lets change everywhere we have color to fill aesthetic
+palmerpenguins::penguins |> 
+  filter(!is.na(sex)) |> 
+  ggplot(
+    aes(x = bill_length_mm, y = body_mass_g, fill = species)) + 
+      geom_point( shape = 21, size = 5, alpha = 0.85, color = 'grey') + # geom_pont doesnt have a fill aesthetic we changed the shape to 21 to bring the colored points, because shape here act as the fill point instead of a regular point
+    theme_minimal(
+      base_size = 16, base_family = "Britannic Bold"
+    ) + 
+    labs(
+      x = "Bill length (in mm)", 
+      y = "Penguin weights (in g)", 
+      title = 'Penguins from the Palmer Archipelago', 
+      fill = 'Species'
+    ) + 
+  scale_fill_viridis_d(option = 'cividis')
+```
+
+## Number 2 scale_color_manual()
+
+[**Okabe Ito Colors**](https://mikemol.github.io/technique/colorblind/2018/02/11/color-safe-palette.html)
+
+[**coolors.co**](https://coolors.co/7ae7c7-ffcad4-4c5b5c-f93943-dd6031)
+
+```{r}
+my_favorite_colors <- c("#E69F00", "#009E73", "#007282")
+# always set the names of your color vectors so that you can refer to them later on
+names(my_favorite_colors) = c("Adelie",   "Chinstrap", "Gentoo")
+
+my_penguins_plot +
+scale_color_manual(values = my_favorite_colors)
+```
+
+## Number 3: scale_color_identity
+
+```{r}
+palmerpenguins::penguins |> 
+  filter(!is.na(sex)) |> 
+  mutate( my_color = case_when(
+    bill_length_mm < 40 ~ "#007282", 
+    between(bill_length_mm, 40, 50) ~ "#009E73", 
+    bill_length_mm > 50 ~ "#E69F00", 
+    
+  )) |> 
+  ggplot(
+    aes(x = bill_length_mm, y = body_mass_g, color = my_color)) + 
+      geom_point(size = 5, alpha = 0.85) +
+    theme_minimal(
+      base_size = 16, base_family = "Source Sans Pro"
+    ) + 
+    labs(
+      x = "Bill length (in mm)", 
+      y = "Penguin weights (in g)", 
+      title = 'Penguins from the Palmer Archipelago', 
+      color = 'Species'
+    ) +
+  scale_color_identity()
+```
