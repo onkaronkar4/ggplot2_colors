@@ -31,7 +31,7 @@ colors <- c("white", "aliceblue", "antiquewhite", "antiquewhite1", "antiquewhite
 
 2.  https://htmlcolorcodes.com/
 
-## R code for show_col
+## R code for show_col useful to use the desired colors
 
 ```{r}
 library(scales)
