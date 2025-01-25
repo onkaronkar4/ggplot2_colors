@@ -31,6 +31,18 @@ colors <- c("white", "aliceblue", "antiquewhite", "antiquewhite1", "antiquewhite
 
 2.  https://htmlcolorcodes.com/
 
+## R code for show_col
+
+```{r}
+library(scales)
+library(colorspace)
+## Show colors
+show_col(c('firebrick', '#FFFF00', 'green'))
+
+hcl.colors(10, "Viridis")
+show_col(hcl.colors(10, "Viridis"))
+```
+
 ## Changing other parameters with hex codes like background
 
 You can also change the color of the plot background, the grid lines, and the text.
